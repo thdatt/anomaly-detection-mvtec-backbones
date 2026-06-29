@@ -1,16 +1,21 @@
 # Industrial Anomaly Detection — Backbone Comparison (MVTec-AD)
 
-Code for my bachelor thesis. The idea is simple: take one fixed PatchCore-style
-pipeline and **only swap the feature backbone**, then see how much the backbone
-alone changes anomaly-detection results on MVTec-AD (all 15 categories).
+Code for my bachelor thesis. The idea is simple: keep one fixed PatchCore-style
+pipeline and change **mainly the feature backbone** (each backbone at its own
+standard input resolution), then see how much that changes anomaly-detection
+results on MVTec-AD (all 15 categories).
 
 Three backbones, increasing in strength:
-**ResNet50** (supervised CNN) → **DINO ViT-S/8** (self-supervised) → **DINOv2 ViT-S/14** (self-supervised, higher resolution).
+**ResNet50** (supervised CNN, 224px) → **DINO ViT-S/8** (self-supervised, 224px) → **DINOv2 ViT-S/14** (self-supervised, 518px).
 
-> Short version of what I found: in my experiments, stronger backbones consistently
-> gave better detection, and most of the difference comes from a few hard,
-> fine-grained categories (screw, capsule, pill). I'm reporting this as an
-> observation under a fixed pipeline, not a general law.
+> Short version of what I found: in my experiments, the stronger backbone
+> configurations gave better detection **on average** (mean over 15 categories), and
+> most of the difference comes from a few hard, fine-grained categories (screw,
+> capsule, pill). The per-category ranking is *not* uniform (e.g. on capsule, DINO
+> slightly beats DINOv2). Also note that DINOv2 changes both the backbone **and** the
+> input resolution, so I treat "backbone + resolution" as one bundled choice and do
+> not try to separate them. I'm reporting this as an observation under one fixed
+> pipeline and one benchmark, not a general law.
 
 ---
 
@@ -89,7 +94,7 @@ python tune_threshold.py dinov2 screw
 
 ---
 
-## The pipeline (only the backbone changes)
+## The pipeline (only Stage 2, the backbone, changes)
 
 ```
 image -> backbone -> L2-normalized patch features
@@ -112,9 +117,10 @@ Two things I was careful about:
 - **Leakage-free**: the threshold is set only on held-out *good* images (an 80/20
   split of the training set). Test labels are never used to pick the threshold.
 - **Controlled**: preprocessing, memory bank, scoring and threshold are identical
-  across all three runs — only the backbone differs (note: the official DINOv2 also
-  runs at a higher input resolution, so resolution differs too; I mention this in the
-  thesis).
+  across all three runs — what changes is Stage 2, the backbone. The official DINOv2
+  also runs at a higher input resolution, so resolution changes together with the
+  backbone; I treat that as one bundled choice and say so in the thesis rather than
+  claiming a pure "backbone-only" comparison.
 
 ---
 
