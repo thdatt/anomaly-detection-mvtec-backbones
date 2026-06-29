@@ -1,0 +1,23 @@
+# dataset (~5GB, download separately, see README)
+mvtec_anomaly_detection/
+
+# generated figures (regenerate with make_figures.py / make_data_figures.py)
+figures/
+
+# python
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+env/
+
+# outputs / logs
+outputs/
+*.log
+
+# editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
