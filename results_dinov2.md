@@ -1,7 +1,7 @@
 # Cross-Category Evaluation — backbone: dinov2
 
 Status: FINISHED
-Coreset ratio: 0.1 | Scoring: method=max, top_k=10, smooth_sigma=1.0
+Coreset ratio: 0.1 | Scoring: max over smoothed map (smooth_sigma=1.0)
 Threshold: method=sigma, param=2.0 (leakage-free: set on held-out good only)
 
 | Category | Build | Test good | Test def | Threshold | AUC-ROC | F1 | FP |
