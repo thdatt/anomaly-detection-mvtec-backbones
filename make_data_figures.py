@@ -88,7 +88,7 @@ def patch_scores(backbone, tf, mb, image_path):
 
 def score_image(backbone, tf, mb, image_path):
     ps = patch_scores(backbone, tf, mb, image_path)
-    return image_anomaly_score(ps, method="max", top_k=10, smooth_sigma=1.0).item()
+    return image_anomaly_score(ps, smooth_sigma=1.0).item()
 
 
 def evaluate(backbone, tf, mb, cat):

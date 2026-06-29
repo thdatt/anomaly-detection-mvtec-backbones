@@ -14,7 +14,6 @@ from torchvision.models import resnet50, ResNet50_Weights
 from torchvision.transforms import transforms
 from pathlib import Path
 import numpy as np
-from PIL import Image
 
 
 # ============================================================================
@@ -39,9 +38,7 @@ class Config:
         # Memory bank compression
         self.coreset_ratio = 0.1
 
-        # Scoring: how to reduce patch scores to image-level score
-        self.score_method = 'max'          # 'max' or 'mean_top_k'
-        self.score_top_k = 10
+        # Scoring: image-level score = max over the (smoothed) patch score map
         self.smooth_sigma = 1.0
 
         # Threshold: where to draw decision boundary on held-out good scores
@@ -240,14 +237,13 @@ def smooth_map(score_map, sigma):
     return m.squeeze(0).squeeze(0)
 
 
-def image_anomaly_score(patch_scores, method='max', top_k=10, smooth_sigma=0.0):
-    """Reduce patch-level scores to image-level anomaly score.
+def image_anomaly_score(patch_scores, smooth_sigma=0.0):
+    """Reduce patch-level scores to an image-level anomaly score: the maximum over
+    the (optionally Gaussian-smoothed) spatial score map.
 
     Args:
         patch_scores: (n_patches,) tensor
-        method: 'max' or 'mean_top_k'
-        top_k: if method='mean_top_k', average top_k scores
-        smooth_sigma: if > 0, apply Gaussian smoothing to spatial map first
+        smooth_sigma: if > 0, apply Gaussian smoothing to the spatial map first
 
     Returns: scalar anomaly score
     """
@@ -257,13 +253,7 @@ def image_anomaly_score(patch_scores, method='max', top_k=10, smooth_sigma=0.0):
             smoothed = smooth_map(patch_scores.view(side, side), smooth_sigma)
             patch_scores = smoothed.reshape(-1)
 
-    if method == 'max':
-        return patch_scores.max()
-    elif method == 'mean_top_k':
-        k = min(top_k, patch_scores.numel())
-        return patch_scores.topk(k).values.mean()
-    else:
-        raise ValueError(f"Unknown scoring method: {method}")
+    return patch_scores.max()
 
 
 def compute_threshold(calib_scores, method='sigma', param=2.0):
@@ -286,41 +276,3 @@ def compute_threshold(calib_scores, method='sigma', param=2.0):
         return float(s.max())
     else:
         raise ValueError(f"Unknown threshold method: {method}")
-
-
-# ============================================================================
-# ANOMALY DETECTOR
-# ============================================================================
-
-class AnomalyDetector:
-    """Detects anomalies: score images, compare to threshold."""
-    def __init__(self, backbone, memory_bank, device='cuda'):
-        self.backbone = backbone
-        self.memory_bank = memory_bank
-        self.device = device
-        self.threshold = None
-
-    def set_threshold(self, value):
-        self.threshold = value
-
-    def score_image(self, image_path):
-        """Load image, extract features, compute anomaly score."""
-        image = transforms.ToTensor()(transforms.Resize((self.backbone.transform.transforms[0].size[0], self.backbone.transform.transforms[0].size[0]))(
-            Image.open(image_path).convert('RGB')
-        ))
-        image = self.backbone.transform(image).unsqueeze(0).to(self.device)
-
-        with torch.no_grad():
-            features = self.backbone(image)
-            features = features / (torch.norm(features, dim=1, keepdim=True) + 1e-8)
-            distances = torch.cdist(features, self.memory_bank.get(), p=2.0)
-            patch_scores = torch.min(distances, dim=1)[0]
-
-        return image_anomaly_score(patch_scores, method='max', top_k=10, smooth_sigma=1.0).item()
-
-    def predict(self, image_path):
-        """Score image and return binary prediction."""
-        if self.threshold is None:
-            raise ValueError("Set threshold first")
-        score = self.score_image(image_path)
-        return 1 if score >= self.threshold else 0

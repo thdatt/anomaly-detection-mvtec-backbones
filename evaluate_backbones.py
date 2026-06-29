@@ -60,8 +60,6 @@ def score_image(image_path, memory_bank):
 
     return image_anomaly_score(
         patch_scores,
-        method=config.score_method,
-        top_k=config.score_top_k,
         smooth_sigma=config.smooth_sigma
     ).item()
 
@@ -74,8 +72,8 @@ def write_results(rows, total_categories, finished):
         f"# Cross-Category Evaluation — backbone: {BACKBONE}",
         "",
         f"Status: {status}",
-        f"Coreset ratio: {config.coreset_ratio} | Scoring: method={config.score_method}, "
-        f"top_k={config.score_top_k}, smooth_sigma={config.smooth_sigma}",
+        f"Coreset ratio: {config.coreset_ratio} | Scoring: max over smoothed map "
+        f"(smooth_sigma={config.smooth_sigma})",
         f"Threshold: method={config.threshold_method}, param={config.threshold_param} "
         f"(leakage-free: set on held-out good only)",
         "",

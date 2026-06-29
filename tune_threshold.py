@@ -53,8 +53,6 @@ def score_image(image_path, memory_bank):
 
     return image_anomaly_score(
         patch_scores,
-        method=config.score_method,
-        top_k=config.score_top_k,
         smooth_sigma=config.smooth_sigma
     ).item()
 
