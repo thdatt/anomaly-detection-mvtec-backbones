@@ -3,8 +3,12 @@ Threshold analysis tool: test various policies on held-out good scores.
 
 Usage:
     python tune_threshold.py dinov2 screw
+    python tune_threshold.py dino_vit screw 384   # optional ViT input resolution
 
 Shows how precision, recall, F1 change across threshold policies.
+The optional third argument overrides the ViT input resolution, which
+reproduces the resolution sweep reported for the screw category (e.g.
+DINO at 320/384). It is ignored for resnet50.
 
 IMPORTANT: The threshold MUST be chosen from a policy applied to HELD-OUT GOOD images only.
 The "ORACLE" row (best F1 on test labels) is shown only to show the ceiling — it requires
@@ -25,10 +29,11 @@ from anomaly_system import (
 # Parse arguments
 BACKBONE = sys.argv[1] if len(sys.argv) > 1 else 'dinov2'
 CATEGORY = sys.argv[2] if len(sys.argv) > 2 else 'screw'
+IMG_SIZE = int(sys.argv[3]) if len(sys.argv) > 3 else None  # optional ViT resolution
 
 # Setup
 config = Config()
-backbone = get_feature_extractor(BACKBONE, device=config.device)
+backbone = get_feature_extractor(BACKBONE, device=config.device, img_size=IMG_SIZE)
 tf = backbone.transform
 base_path = config.base_path
 
@@ -100,7 +105,8 @@ def format_row(name, thr):
 
 
 # Print analysis
-print(f"\n=== {BACKBONE} / {CATEGORY} ===  AUC={auc:.4f}  (good={n_good}, defect={n_def})")
+res_tag = f" @ {IMG_SIZE}px" if IMG_SIZE else ""
+print(f"\n=== {BACKBONE}{res_tag} / {CATEGORY} ===  AUC={auc:.4f}  (good={n_good}, defect={n_def})")
 print(f"calib good (held-out): mean={calib_scores.mean():.4f} std={calib_scores.std():.4f} "
       f"n={len(calib_scores)}\n")
 

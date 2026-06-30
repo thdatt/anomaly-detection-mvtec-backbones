@@ -150,14 +150,20 @@ class ViTExtractor(FeatureExtractor):
         return tokens[:, self.num_prefix_tokens:, :].squeeze(0)
 
 
-def get_feature_extractor(name, device='cuda'):
-    """Factory: return configured extractor + transform."""
+def get_feature_extractor(name, device='cuda', img_size=None):
+    """Factory: return configured extractor + transform.
+
+    img_size: optional override of the input resolution for ViT backbones
+    (uses dynamic position-embedding interpolation). Ignored for ResNet50,
+    which is fixed at 224. Used to reproduce the resolution sweep in the
+    report (e.g. DINO at 320/384) without editing code.
+    """
     if name == 'resnet50':
         return ResNet50Extractor(device=device)
     elif name == 'dino_vit':
-        return ViTExtractor(device=device, model_name='vit_small_patch8_224.dino')
+        return ViTExtractor(device=device, model_name='vit_small_patch8_224.dino', img_size=img_size)
     elif name == 'dinov2':
-        return ViTExtractor(device=device, model_name='vit_small_patch14_dinov2.lvd142m')
+        return ViTExtractor(device=device, model_name='vit_small_patch14_dinov2.lvd142m', img_size=img_size)
     else:
         raise ValueError(f"Unknown backbone: {name}")
 

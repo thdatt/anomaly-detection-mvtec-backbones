@@ -169,8 +169,8 @@ def fig_backbones():
     ax.axis("off"); ax.set_xlim(0, 9); ax.set_ylim(0, 3.4)
     data = [
         ("ResNet50", "Supervised CNN\n(ImageNet)", "224 x 224", "1536-d", C_RESNET),
-        ("DINO ViT-S/8", "Self-supervised\nViT", "224 x 224", "384-d", C_DINO),
-        ("DINOv2 ViT-S/14", "Self-supervised\n(~1B images)", "518 x 518", "384-d", C_DINOV2),
+        ("DINO ViT-S/8", "Self-supervised\n(ImageNet)", "224 x 224", "384-d", C_DINO),
+        ("DINOv2 ViT-S/14", "Self-supervised\n(~142M images)", "518 x 518", "384-d", C_DINOV2),
     ]
     bw = 2.6; gap = (9 - 3*bw)/4
     for i, (name, kind, res, dim, col) in enumerate(data):
