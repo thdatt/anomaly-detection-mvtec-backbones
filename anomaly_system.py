@@ -45,14 +45,6 @@ class Config:
         self.threshold_method = 'sigma'    # 'sigma', 'quantile', or 'max'
         self.threshold_param = 2.0         # k (for sigma) or q (for quantile)
 
-    def get_paths(self):
-        """Returns train_good, test_good, test_defective paths."""
-        return {
-            'train_good': self.base_path / self.dataset_name / 'train' / 'good',
-            'test_good': self.base_path / self.dataset_name / 'test' / 'good',
-            'test_defective': self.base_path / self.dataset_name / 'test' / 'defective',
-        }
-
 
 # ============================================================================
 # IMAGE TRANSFORMS
@@ -84,7 +76,7 @@ class FeatureExtractor(nn.Module):
 
 
 class ResNet50Extractor(FeatureExtractor):
-    """ResNet50 conv5 features, avg pooled, normalized."""
+    """ResNet50 layer2+layer3 features, avg pooled, normalized."""
     def __init__(self, device='cuda'):
         super().__init__(device)
 
